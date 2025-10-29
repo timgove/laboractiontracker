@@ -1,0 +1,109 @@
+---
+title: "labor_group_data_exploration"
+author: "Anisha RajBhandary"
+format: html
+editor: visual
+---
+
+```{r}
+setwd("/Users/anisharajbhandary/Big Data Class")
+# getwd()
+
+library(tidyverse) #data manipulation 
+library(readxl) #excel files 
+library(janitor) #clean col
+library(rsample) #data splitting
+# Load the raw data
+
+labor_explore <- read_excel("Labor action tracker data_group_clean.xlsx")
+```
+
+```{r}
+
+# split the data based on date 
+labor_train <- labor_explore %>%
+  filter(`Start Date` <= as.Date("2023-12-05"))
+
+labor_test <- labor_explore %>%
+  filter(`Start Date` > as.Date("2023-12-06"))
+
+#automatically removing 11 NAs associated with start_date --> deal with this later, I think same NAs removed for strike/protest
+```
+
+```{r}
+
+#clean the training data 
+labor_train_clean <- labor_train %>%
+  janitor::clean_names() %>%
+  mutate(
+    # Convert dates (explicit conversion even if already dates)
+    start_date = as.Date(start_date),
+    end_date = as.Date(end_date),
+    
+    # Create outcome variable (Strike vs Protest)
+    is_strike = factor(strike_or_protest == "Strike", 
+                      levels = c(FALSE, TRUE),
+                      labels = c("Protest", "Strike")),
+    
+    # Convert numeric variables
+    bargaining_unit_size = as.numeric(bargaining_unit_size),
+    approximate_number_of_participants = as.numeric(approximate_number_of_participants),
+    duration_amount = as.numeric(duration_amount)) %>%
+  filter(!is.na(strike_or_protest))
+
+#deal with industry and state variables later --> need to factor 
+#drop unrelated variables 
+#deal with duplicates LATER 
+# summary(labor_train_clean$is_strike)
+```
+
+```{r}
+#save the labor_train_clean as a new spreadsheet --> come back to it later
+
+# # Save processed data
+# # Using .rds format to preserve data types (better than CSV!)
+# saveRDS(
+#   labor_train_clean,
+#   here("data", "processed", "labor_train_clean.rds")
+# )
+
+```
+
+```{r}
+#create new variables 
+
+#top five companies vs. other 
+
+```
+
+```{r}
+#seperate rows with multiple locations and associated latitude/longitude, zipcode, city, address, 
+
+
+#are multiple industries associated with different locations?? (ignore industry for now)
+
+#some events have multiple employers listed --> check specific ones
+```
+
+```{r}
+#get county dataset and join
+```
+
+```{r}
+# library(dplyr)
+# library(tidycensus)
+# 
+# # Get county centroids from the Census
+# county_coords <- tigris::counties(cb = TRUE) %>%
+#   st_centroid() %>%
+#   mutate(
+#     longitude = st_coordinates(.)[,1],
+#     latitude = st_coordinates(.)[,2]
+#   ) %>%
+#   st_drop_geometry() %>%
+#   select(STATEFP, COUNTYFP, NAME, STATE_NAME, latitude, longitude)
+# 
+# # Your dataset: assume you have county + state names
+# your_data_with_coords <- labor_explore %>%
+#   left_join(county_coords, by = c("county_name" = "NAME", "state_name" = "STATE_NAME"))
+```
